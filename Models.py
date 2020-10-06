@@ -17,3 +17,9 @@ class EdgeValue:
     if self.value > value or self.value is None:
       self.value = value
       self.timestamp = datetime.now()
+
+
+  def reset_value(self):
+    self.value = None
+    self.timestamp = None
+
