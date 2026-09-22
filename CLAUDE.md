@@ -57,16 +57,3 @@ directory for the roadmap rather than looking for it here. Add new decisions the
 entries' content when a decision changes, mark them superseded instead (see that directory's README for the
 convention).
 
-## Known issues to be aware of when touching this code
-
-- `execute_query` builds SQL via f-string interpolation rather than parameterized queries. Planned fix:
-  `execute_query` takes a `parameters` tuple alongside the query string and passes both to `cursor.execute`; the two
-  callers build `?`-placeholder query strings instead of interpolating values directly.
-- `most_common` (MainProgram.py) uses Python 2-only APIs (`dict.iteritems`, `numpy.operator`) and does not return its
-  result — it currently cannot run under Python 3. Planned fix: `return max(dictionary, key=dictionary.get)`.
-- `store_edge_values_in_database` calls `time.today()`, which does not exist on the `time` module.
-  [DatabaseOperations.py](DatabaseOperations.py) only imports `timedelta` from `datetime`, not `datetime` itself.
-  Planned fix: also import `datetime`, and compute `yesterday = datetime.now() - timedelta(days=1)`.
-- Not a bug today, but fragile: `MainProgram.py`'s `time_event` calls `datetime.now()` without importing `datetime`
-  directly — it only works because `from Models import *` happens to also pull in `datetime` (`Models.py` imports it
-  from the `datetime` module). Worth an explicit `from datetime import datetime` if this code is touched.

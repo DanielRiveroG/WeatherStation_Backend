@@ -1,5 +1,6 @@
 import sched
 import time
+from datetime import datetime
 import serial
 import numpy
 
@@ -95,7 +96,7 @@ def most_common(direction_list):
         "SE": direction_list.count("SE"),
         "SW": direction_list.count("SW"),
     }
-    max(dictionary.iteritems(), key=numpy.operator.itemgetter(1))[0]
+    return max(dictionary, key=dictionary.get)
 
 
 if __name__ == '__main__':
