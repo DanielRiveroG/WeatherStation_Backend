@@ -33,3 +33,4 @@ than editing its content away, so the history stays intact.
 | [0014](0014-dependency-management.md) | Dependency management — single shared requirements.txt, loosely pinned | Accepted |
 | [0015](0015-configuration-via-environment-variables.md) | Configuration via environment variables and a shared systemd EnvironmentFile | Accepted |
 | [0016](0016-logging-via-stdlib-logging-to-stdout.md) | Logging via the stdlib logging module, to stdout | Accepted |
+| [0017](0017-daily-summary-day-column.md) | Add a Day column to DailySummary | Accepted |

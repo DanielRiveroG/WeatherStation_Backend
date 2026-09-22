@@ -29,25 +29,32 @@ with a hardcoded sample string (`data = "W:1,R:5,H2"`) used in its place for loc
 
 Three modules, no packages:
 
-- [MainProgram.py](MainProgram.py) — entry point and main loop. Reads a line of serial data formatted as
-  comma-separated `Key:Value` pairs, parses it via `slice_data`/`store_in_array`, and buffers readings into
-  module-level lists (`temperatureList`, `humidityList`, `windSpeedList`, `windDirectionList`, `pressureList`,
-  `rainList`) keyed by parameter code (`T`=temperature, `H`=humidity, `W`=wind speed, `D`=wind direction,
-  `P`=pressure, `R`=rain). A `sched.scheduler` (`timer`) drives `time_event`, which fires every 60 real seconds and:
+- [MainProgram.py](MainProgram.py) — entry point and main loop. Calls `initialize_database()` once at startup, then
+  reads a line of serial data formatted as comma-separated `Key:Value` pairs, parses it via
+  `slice_data`/`store_in_array`, and buffers readings into module-level lists (`temperatureList`, `humidityList`,
+  `windSpeedList`, `windDirectionList`, `pressureList`, `rainList`) keyed by parameter code (`T`=temperature,
+  `H`=humidity, `W`=wind speed, `D`=wind direction, `P`=pressure, `R`=rain). A `sched.scheduler` (`timer`) drives
+  `time_event`, which fires every 60 real seconds and:
   - every 5 minutes: computes the mean of temperature/humidity/pressure/wind speed and the predominant wind
     direction (`most_common`) over the buffered readings, computes accumulated (summed, not averaged) rain, and
-    calls `store_weather_parameters_in_database` to write one row to the daily register.
-  - at midnight: calls `store_edge_values_in_database` with the day's min/max `EdgeValue`s (edge register), then
-    resets them for the next day.
+    calls `store_weather_parameters_in_database` to write one row to `RawReadings`.
+  - at midnight: calls `store_edge_values_in_database` with the day's min/max `EdgeValue`s, which writes one row to
+    `DailySummary` (extremes plus mean/dominant-direction/accumulated-rain columns computed by querying that day's
+    `RawReadings` rows), then resets the `EdgeValue`s for the next day.
 - [Models.py](Models.py) — defines `EdgeValue(value, timestamp)`, a small tracker used for daily min/max readings
-  (temperature, humidity, wind). `update_max_edge`/`update_min_edge` update the value and timestamp when a new
-  reading exceeds the current extreme; `reset_value` clears both fields (called after the daily edge values are
-  flushed to the database).
-- [DatabaseOperations.py](DatabaseOperations.py) — SQLite persistence. `store_weather_parameters_in_database` inserts
-  a row into `DailyRegister`; `store_edge_values_in_database` inserts a row into `EdgeRegister`. Both build a SQL
-  string and hand it to `execute_query`, which opens/closes a fresh `sqlite3.connect('Weather_Data.db')` connection
-  per call. Neither the `DailyRegister` nor `EdgeRegister` table schema, nor any DB-creation script, exists yet in
-  this repo.
+  (temperature, humidity, wind). `update_max_edge`/`update_min_edge` update the value and Unix-epoch timestamp when
+  a new reading exceeds the current extreme; `reset_value` clears both fields (called after the daily edge values
+  are flushed to the database).
+- [DatabaseOperations.py](DatabaseOperations.py) — SQLite persistence against `Weather_Data.db`.
+  `initialize_database()` creates the `RawReadings` and `DailySummary` tables (`CREATE TABLE IF NOT EXISTS`) if
+  they don't exist yet — see [docs/decisions/0008](docs/decisions/0008-database-schema.md),
+  [0009](docs/decisions/0009-rename-tables-and-daily-summary-aggregates.md), and
+  [0017](docs/decisions/0017-daily-summary-day-column.md) for the schema. `store_weather_parameters_in_database`
+  inserts a row into `RawReadings`; `store_edge_values_in_database` inserts a row into `DailySummary`, deriving its
+  mean/dominant-direction/accumulated-rain columns from `RawReadings` via `_fetch_daily_means`/
+  `_fetch_dominant_direction`. All queries are parameterized (`?` placeholders), not string-interpolated. Pressure
+  min/max and the wind gust's own direction aren't tracked anywhere yet, so those `DailySummary` columns are always
+  `NULL` for now — tracking them is a still-open gap, not a bug in this code.
 
 ## Target architecture / roadmap
 

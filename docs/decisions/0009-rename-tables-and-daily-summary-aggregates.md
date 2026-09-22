@@ -1,6 +1,7 @@
 # 0009: Rename tables; DailySummary gains mean/dominant-direction/accumulated-rain columns
 
-**Status:** Accepted
+**Status:** Accepted. **Amended by [0017](0017-daily-summary-day-column.md)**: `DailySummary` also gets a `Day`
+column, missed in the column list below.
 
 ## Context
 

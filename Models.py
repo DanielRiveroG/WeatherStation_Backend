@@ -8,15 +8,15 @@ class EdgeValue:
 
 
   def update_max_edge(self, value):
-    if self.value < value or self.value is None:
+    if self.value is None or self.value < value:
       self.value = value
-      self.timestamp = datetime.now().strftime("%H:%M:%S")
+      self.timestamp = int(datetime.now().timestamp())
 
 
   def update_min_edge(self, value):
-    if self.value > value or self.value is None:
+    if self.value is None or self.value > value:
       self.value = value
-      self.timestamp = datetime.now().strftime("%H:%M:%S")
+      self.timestamp = int(datetime.now().timestamp())
 
 
   def reset_value(self):

@@ -26,6 +26,7 @@ timer = sched.scheduler(time.time, time.sleep)
 
 
 def main():
+    initialize_database()
     timer.enter(60, 1, time_event)
     timer.run()
     while True:
