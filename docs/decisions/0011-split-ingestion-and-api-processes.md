@@ -34,3 +34,11 @@ guard.
 - `/weather/live`'s freshness is bounded by how recently the ingestion process last wrote a row (every 5 minutes,
   the existing aggregation cadence) — no behavior change from the frontend's point of view, only where the data
   comes from.
+
+## Addendum: schema creation lives only in the ingestion process
+
+"Independent" above means independent memory/process isolation (no shared in-process state) — it doesn't mean
+independent deployment lifecycle. In practice the two processes are always run together, with the ingestion
+process (`MainProgram.py`) started first. Given that, `initialize_database()` is called only from `MainProgram.py`;
+it was originally also called from `Api.py`'s `__main__` block for safety regardless of start order, but that's
+removed as unnecessary — the API is never expected to be the first thing run against a fresh database.

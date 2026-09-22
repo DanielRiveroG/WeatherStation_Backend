@@ -26,7 +26,9 @@ python MainProgram.py   # ingestion process — auto-detects the Arduino's seria
 python Api.py           # API process, http://localhost:5000
 ```
 
-Both processes call `initialize_database()` on startup, so either can be started first against a fresh database.
+Only `MainProgram.py` calls `initialize_database()` on startup — the two processes are always run together with
+`MainProgram.py` started first, so it alone is responsible for the schema existing (see
+[docs/decisions/0011](docs/decisions/0011-split-ingestion-and-api-processes.md)'s addendum).
 
 `MainProgram.py` auto-detects the Arduino's serial port (`find_arduino_port()`, matching known vendor IDs or an
 "arduino" description — see [docs/decisions/0018](docs/decisions/0018-arduino-autodetect-and-simulation-mode.md))

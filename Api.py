@@ -223,5 +223,7 @@ app.register_blueprint(weather)
 
 
 if __name__ == '__main__':
-    db.initialize_database()
+    # Schema creation lives only in MainProgram.py's startup (see docs/decisions/0011) - the two processes
+    # are always run together, with MainProgram started first, so it's the one responsible for the database
+    # existing at all.
     app.run(host='0.0.0.0', port=5000)
