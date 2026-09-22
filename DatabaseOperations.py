@@ -53,9 +53,7 @@ def store_weather_parameters_in_database(wind_speed, wind_direction, temperature
                                   int(timestamp.timestamp())))
 
 
-def store_edge_values_in_database(max_temp, min_temp, max_hum, min_hum, max_wind_gust):
-    # Pressure min/max and the gust's own wind direction aren't tracked yet (see decisions 0003/0008/0009's
-    # noted gap) - stored as NULL until that tracking exists.
+def store_edge_values_in_database(max_temp, min_temp, max_hum, min_hum, max_pressure, min_pressure, max_wind_gust):
     yesterday = datetime.now() - timedelta(days=1)
     day_start = datetime(yesterday.year, yesterday.month, yesterday.day)
     day_start_epoch = int(day_start.timestamp())
@@ -77,10 +75,10 @@ def store_edge_values_in_database(max_temp, min_temp, max_hum, min_hum, max_wind
     """
     execute_query(query_string, (
         day_start_epoch,
-        max_wind_gust.value, None, max_wind_gust.timestamp,
+        max_wind_gust.value, max_wind_gust.direction, max_wind_gust.timestamp,
         max_temp.value, max_temp.timestamp, min_temp.value, min_temp.timestamp,
         max_hum.value, max_hum.timestamp, min_hum.value, min_hum.timestamp,
-        None, None, None, None,
+        max_pressure.value, max_pressure.timestamp, min_pressure.value, min_pressure.timestamp,
         mean_temp, mean_humidity, mean_pressure, mean_wind_speed,
         dominant_wind_direction, accumulated_rain,
     ))

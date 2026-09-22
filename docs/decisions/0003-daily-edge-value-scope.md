@@ -1,6 +1,11 @@
 # 0003: Track daily min/max temperature, min/max humidity, min/max pressure, and max wind gust
 
-**Status:** Proposed
+**Status:** Implemented. `Models.py`'s `EdgeValue` pair for pressure and a `GustEdgeValue` (value + timestamp +
+direction, populated by pairing each reading's `W` with that same reading's `D`) now exist and feed
+`DailySummary`'s `Max_Pressure`/`Min_Pressure`/`Max_Wind_Gust`/`Max_Wind_Gust_Direction` columns — closing the gap
+noted below. The "gust as a genuinely different, short-duration measurement" nuance in the second consequence below
+was not pursued; the gust is still the max of the same per-reading wind speed samples used for the average, just
+now paired with a direction.
 
 ## Context
 

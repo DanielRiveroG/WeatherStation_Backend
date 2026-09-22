@@ -30,31 +30,35 @@ with a hardcoded sample string (`data = "W:1,R:5,H2"`) used in its place for loc
 Three modules, no packages:
 
 - [MainProgram.py](MainProgram.py) — entry point and main loop. Calls `initialize_database()` once at startup, then
-  reads a line of serial data formatted as comma-separated `Key:Value` pairs, parses it via
-  `slice_data`/`store_in_array`, and buffers readings into module-level lists (`temperatureList`, `humidityList`,
-  `windSpeedList`, `windDirectionList`, `pressureList`, `rainList`) keyed by parameter code (`T`=temperature,
-  `H`=humidity, `W`=wind speed, `D`=wind direction, `P`=pressure, `R`=rain). A `sched.scheduler` (`timer`) drives
-  `time_event`, which fires every 60 real seconds and:
+  reads a line of serial data formatted as comma-separated `Key:Value` pairs. `slice_data` parses a whole line into
+  a `{code: value}` dict first (order-independent) and hands it to `store_reading`, which buffers readings into
+  module-level lists (`temperatureList`, `humidityList`, `windSpeedList`, `windDirectionList`, `pressureList`,
+  `rainList`) keyed by parameter code (`T`=temperature, `H`=humidity, `W`=wind speed, `D`=wind direction,
+  `P`=pressure, `R`=rain). Parsing a full line at once (rather than one code at a time) is what lets the `W`
+  handling look up that same reading's `D` value, needed to pair a wind gust with its direction. A
+  `sched.scheduler` (`timer`) drives `time_event`, which fires every 60 real seconds and:
   - every 5 minutes: computes the mean of temperature/humidity/pressure/wind speed and the predominant wind
     direction (`most_common`) over the buffered readings, computes accumulated (summed, not averaged) rain, and
     calls `store_weather_parameters_in_database` to write one row to `RawReadings`.
-  - at midnight: calls `store_edge_values_in_database` with the day's min/max `EdgeValue`s, which writes one row to
+  - at midnight: calls `store_edge_values_in_database` with the day's min/max `EdgeValue`s (temperature, humidity,
+    pressure) and `maxWindGust` (a `GustEdgeValue`, carrying the gust's own wind direction), which writes one row to
     `DailySummary` (extremes plus mean/dominant-direction/accumulated-rain columns computed by querying that day's
-    `RawReadings` rows), then resets the `EdgeValue`s for the next day.
+    `RawReadings` rows), then resets all of them for the next day.
 - [Models.py](Models.py) — defines `EdgeValue(value, timestamp)`, a small tracker used for daily min/max readings
-  (temperature, humidity, wind). `update_max_edge`/`update_min_edge` update the value and Unix-epoch timestamp when
-  a new reading exceeds the current extreme; `reset_value` clears both fields (called after the daily edge values
-  are flushed to the database).
+  (temperature, humidity, pressure). `update_max_edge`/`update_min_edge` update the value and Unix-epoch timestamp
+  when a new reading exceeds the current extreme; `reset_value` clears both fields. `GustEdgeValue` extends it with
+  a `direction` field, set alongside the value/timestamp whenever `update_max_edge(value, direction)` finds a new
+  peak — used for the wind gust, which needs to remember which direction the wind was blowing at its peak, not just
+  the peak speed.
 - [DatabaseOperations.py](DatabaseOperations.py) — SQLite persistence against `Weather_Data.db`.
   `initialize_database()` creates the `RawReadings` and `DailySummary` tables (`CREATE TABLE IF NOT EXISTS`) if
   they don't exist yet — see [docs/decisions/0008](docs/decisions/0008-database-schema.md),
   [0009](docs/decisions/0009-rename-tables-and-daily-summary-aggregates.md), and
   [0017](docs/decisions/0017-daily-summary-day-column.md) for the schema. `store_weather_parameters_in_database`
-  inserts a row into `RawReadings`; `store_edge_values_in_database` inserts a row into `DailySummary`, deriving its
-  mean/dominant-direction/accumulated-rain columns from `RawReadings` via `_fetch_daily_means`/
-  `_fetch_dominant_direction`. All queries are parameterized (`?` placeholders), not string-interpolated. Pressure
-  min/max and the wind gust's own direction aren't tracked anywhere yet, so those `DailySummary` columns are always
-  `NULL` for now — tracking them is a still-open gap, not a bug in this code.
+  inserts a row into `RawReadings`; `store_edge_values_in_database` inserts a row into `DailySummary`, combining the
+  extremes/gust it's passed with mean/dominant-direction/accumulated-rain columns derived from `RawReadings` via
+  `_fetch_daily_means`/`_fetch_dominant_direction`. All queries are parameterized (`?` placeholders), not
+  string-interpolated.
 
 ## Target architecture / roadmap
 
