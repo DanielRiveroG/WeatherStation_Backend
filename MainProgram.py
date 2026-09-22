@@ -57,7 +57,7 @@ def store_in_array(parameter, value):
     elif parameter == 'P':
         pressureList.append(value)
     elif parameter == 'R':
-        pressureList.append(value)
+        rainList.append(value)
 
 
 def time_event():
