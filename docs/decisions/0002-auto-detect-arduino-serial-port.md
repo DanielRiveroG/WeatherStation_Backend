@@ -1,6 +1,7 @@
 # 0002: Auto-detect the Arduino's serial port instead of hardcoding it
 
-**Status:** Proposed
+**Status:** Implemented — see [0018](0018-arduino-autodetect-and-simulation-mode.md) for the concrete
+matching heuristic and the simulation-mode fallback added alongside it.
 
 ## Context
 

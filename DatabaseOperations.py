@@ -84,6 +84,33 @@ def store_edge_values_in_database(max_temp, min_temp, max_hum, min_hum, max_pres
     ))
 
 
+def fetch_latest_raw_reading():
+    return _fetch_one(
+        "SELECT Wind_Speed, Wind_Direction, Temperature, Humidity, Pressure, Date "
+        "FROM RawReadings ORDER BY Date DESC LIMIT 1")
+
+
+def fetch_rain_accumulated_since(start_epoch):
+    row = _fetch_one("SELECT SUM(Rain) FROM RawReadings WHERE Date >= ?", (start_epoch,))
+    return row[0] if row and row[0] is not None else 0
+
+
+def fetch_raw_readings(start_epoch, end_epoch):
+    return _fetch_all(
+        "SELECT Wind_Speed, Wind_Direction, Temperature, Humidity, Pressure, Rain, Date "
+        "FROM RawReadings WHERE Date >= ? AND Date < ? ORDER BY Date",
+        (start_epoch, end_epoch))
+
+
+def fetch_daily_summaries(start_day_epoch, end_day_epoch):
+    return _fetch_all(
+        "SELECT Day, Max_Wind_Gust, Max_Wind_Gust_Direction, Max_Temp, Min_Temp, Max_Humidity, Min_Humidity, "
+        "Max_Pressure, Min_Pressure, Mean_Temp, Mean_Humidity, Mean_Pressure, Mean_Wind_Speed, "
+        "Dominant_Wind_Direction, Accumulated_Rain "
+        "FROM DailySummary WHERE Day >= ? AND Day < ? ORDER BY Day",
+        (start_day_epoch, end_day_epoch))
+
+
 def _fetch_daily_means(day_start_epoch, day_end_epoch):
     row = _fetch_one(
         "SELECT AVG(Temperature), AVG(Humidity), AVG(Pressure), AVG(Wind_Speed), SUM(Rain) "
@@ -110,6 +137,21 @@ def _fetch_one(query_string, parameters=()):
     except sqlite3.Error as error:
         print("Error while connecting to sqlite", error)
         return None
+    finally:
+        if sqlite_connection:
+            sqlite_connection.close()
+
+
+def _fetch_all(query_string, parameters=()):
+    sqlite_connection = None
+    try:
+        sqlite_connection = sqlite3.connect(DATABASE_PATH)
+        cursor = sqlite_connection.cursor()
+        cursor.execute(query_string, parameters)
+        return cursor.fetchall()
+    except sqlite3.Error as error:
+        print("Error while connecting to sqlite", error)
+        return []
     finally:
         if sqlite_connection:
             sqlite_connection.close()
