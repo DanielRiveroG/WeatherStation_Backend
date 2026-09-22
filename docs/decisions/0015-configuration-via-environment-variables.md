@@ -1,6 +1,6 @@
 # 0015: Configuration via environment variables and a shared systemd EnvironmentFile
 
-**Status:** Accepted
+**Status:** Accepted (implemented)
 
 ## Context
 
@@ -27,3 +27,18 @@ between the two unit files.
   deployed file, since actual paths may be device-specific) in whatever `deploy/` location those end up in.
 - The app should fall back to sensible defaults when a variable isn't set, so it still runs locally for development
   without requiring systemd or a hand-written env file.
+
+## Addendum: variable names as implemented
+
+All prefixed `WEATHERSTATION_` to avoid collisions, each with a default so nothing is required to run locally:
+
+| Variable | Default | Used by |
+|---|---|---|
+| `WEATHERSTATION_DB_PATH` | `Weather_Data.db` | Both (`DatabaseOperations.DATABASE_PATH`) |
+| `WEATHERSTATION_API_HOST` | `0.0.0.0` | `Api.py` |
+| `WEATHERSTATION_API_PORT` | `5000` | `Api.py` |
+| `WEATHERSTATION_LOG_LEVEL` | `INFO` | Both — see [0016](0016-logging-via-stdlib-logging-to-stdout.md) |
+| `WEATHERSTATION_SERIAL_PORT` | none (auto-detect) | `MainProgram.py` — overrides [0018](0018-arduino-autodetect-and-simulation-mode.md)'s auto-detection |
+| `WEATHERSTATION_SIMULATE` | unset (off) | `MainProgram.py` — already existed, predating this decision, per [0018](0018-arduino-autodetect-and-simulation-mode.md) |
+
+The shared systemd `EnvironmentFile` itself still doesn't exist yet — that's part of [0012](0012-deployment-systemd-gunicorn-nginx.md)'s still-outstanding work.

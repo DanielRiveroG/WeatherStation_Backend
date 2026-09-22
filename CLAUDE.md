@@ -36,6 +36,13 @@ and raises if none is found. Set `WEATHERSTATION_SIMULATE=1` to skip hardware en
 readings instead, for local/frontend testing without an Arduino attached — same parsing/aggregation/DB-write code
 path either way.
 
+Configuration is via environment variables (see
+[docs/decisions/0015](docs/decisions/0015-configuration-via-environment-variables.md)'s addendum for the full
+list), all optional with sensible defaults: `WEATHERSTATION_DB_PATH`, `WEATHERSTATION_API_HOST`/`_API_PORT`,
+`WEATHERSTATION_LOG_LEVEL`, `WEATHERSTATION_SERIAL_PORT` (overrides auto-detection), `WEATHERSTATION_SIMULATE`.
+Both entry points log via the stdlib `logging` module to stdout (see
+[docs/decisions/0016](docs/decisions/0016-logging-via-stdlib-logging-to-stdout.md)), not `print()`.
+
 ## Architecture
 
 Four modules, no packages:

@@ -33,8 +33,8 @@ than editing its content away, so the history stays intact.
 | [0012](0012-deployment-systemd-gunicorn-nginx.md) | Deployment architecture — two systemd services, gunicorn, and nginx | Accepted |
 | [0013](0013-live-rainfall-is-daily-accumulated.md) | Live rainfall reflects the day's accumulated total, not the last reading | Accepted (implemented) |
 | [0014](0014-dependency-management.md) | Dependency management — single shared requirements.txt, loosely pinned | Accepted (implemented) |
-| [0015](0015-configuration-via-environment-variables.md) | Configuration via environment variables and a shared systemd EnvironmentFile | Accepted |
-| [0016](0016-logging-via-stdlib-logging-to-stdout.md) | Logging via the stdlib logging module, to stdout | Accepted |
+| [0015](0015-configuration-via-environment-variables.md) | Configuration via environment variables and a shared systemd EnvironmentFile | Accepted (implemented) |
+| [0016](0016-logging-via-stdlib-logging-to-stdout.md) | Logging via the stdlib logging module, to stdout | Accepted (implemented) |
 | [0017](0017-daily-summary-day-column.md) | Add a Day column to DailySummary | Accepted (implemented) |
 | [0018](0018-arduino-autodetect-and-simulation-mode.md) | Arduino port auto-detection, with a simulation mode for hardware-less testing | Accepted (implemented) |
 | [0019](0019-fix-ingestion-loop-bugs.md) | Fix ingestion-loop bugs found while implementing 0018 | Accepted (implemented) |

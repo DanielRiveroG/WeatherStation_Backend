@@ -1,7 +1,11 @@
+import logging
+import os
 import sqlite3
 from datetime import datetime, timedelta
 
-DATABASE_PATH = 'Weather_Data.db'
+DATABASE_PATH = os.getenv('WEATHERSTATION_DB_PATH', 'Weather_Data.db')
+
+logger = logging.getLogger(__name__)
 
 
 def initialize_database():
@@ -135,7 +139,7 @@ def _fetch_one(query_string, parameters=()):
         cursor.execute(query_string, parameters)
         return cursor.fetchone()
     except sqlite3.Error as error:
-        print("Error while connecting to sqlite", error)
+        logger.error("Error while connecting to sqlite: %s", error)
         return None
     finally:
         if sqlite_connection:
@@ -150,7 +154,7 @@ def _fetch_all(query_string, parameters=()):
         cursor.execute(query_string, parameters)
         return cursor.fetchall()
     except sqlite3.Error as error:
-        print("Error while connecting to sqlite", error)
+        logger.error("Error while connecting to sqlite: %s", error)
         return []
     finally:
         if sqlite_connection:
@@ -165,7 +169,7 @@ def execute_query(query_string, parameters=()):
         cursor.close()
 
     except sqlite3.Error as error:
-        print("Error while connecting to sqlite", error)
+        logger.error("Error while connecting to sqlite: %s", error)
     finally:
         if (sqlite_connection):
             sqlite_connection.commit()

@@ -1,3 +1,6 @@
+import logging
+import os
+import sys
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
 from statistics import mean
@@ -8,6 +11,8 @@ import DatabaseOperations as db
 
 PARAMETERS = {'temperature', 'humidity', 'pressure', 'windSpeed', 'rainfall'}
 TIMESPANS = {'today', 'last7Days', 'lastYear'}
+
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 weather = Blueprint('weather', __name__, url_prefix='/weather')
@@ -223,7 +228,12 @@ app.register_blueprint(weather)
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=os.getenv('WEATHERSTATION_LOG_LEVEL', 'INFO').upper(), stream=sys.stdout,
+                         format='%(asctime)s %(levelname)s %(name)s: %(message)s')
     # Schema creation lives only in MainProgram.py's startup (see docs/decisions/0011) - the two processes
     # are always run together, with MainProgram started first, so it's the one responsible for the database
     # existing at all.
-    app.run(host='0.0.0.0', port=5000)
+    host = os.getenv('WEATHERSTATION_API_HOST', '0.0.0.0')
+    port = int(os.getenv('WEATHERSTATION_API_PORT', '5000'))
+    logger.info("Starting weather API on %s:%s", host, port)
+    app.run(host=host, port=port)

@@ -1,6 +1,8 @@
+import logging
 import os
 import random
 import sched
+import sys
 import threading
 import time
 from datetime import datetime
@@ -17,8 +19,16 @@ from Models import *
 SIMULATE = os.getenv('WEATHERSTATION_SIMULATE', '').lower() in ('1', 'true', 'yes')
 SIMULATED_READING_INTERVAL_SECONDS = 5
 
+# Overrides auto-detection with a specific device path (e.g. /dev/ttyACM0, COM3) - useful for
+# troubleshooting when the auto-detected port isn't the right one.
+SERIAL_PORT_OVERRIDE = os.getenv('WEATHERSTATION_SERIAL_PORT')
+
+LOG_LEVEL = os.getenv('WEATHERSTATION_LOG_LEVEL', 'INFO').upper()
+
 # Vendor IDs seen on real Arduino boards and the common USB-serial chips their clones use.
 ARDUINO_VENDOR_IDS = {0x2341, 0x1A86, 0x0403}
+
+logger = logging.getLogger(__name__)
 
 WIND_DIRECTIONS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
 
@@ -59,7 +69,7 @@ def find_arduino_port():
 
 
 def connect_to_arduino():
-    port = find_arduino_port()
+    port = SERIAL_PORT_OVERRIDE or find_arduino_port()
     if port is None:
         raise RuntimeError(
             "No Arduino serial port found. Connect the weather station, or set "
@@ -79,12 +89,14 @@ def generate_simulated_reading():
 
 
 def main():
+    logging.basicConfig(level=LOG_LEVEL, stream=sys.stdout,
+                         format='%(asctime)s %(levelname)s %(name)s: %(message)s')
     initialize_database()
     timer.enter(60, 1, time_event)
     threading.Thread(target=timer.run, daemon=True).start()
 
     if SIMULATE:
-        print("Running in simulation mode: generating synthetic readings, no Arduino connected")
+        logger.info("Running in simulation mode: generating synthetic readings, no Arduino connected")
         while True:
             slice_data(generate_simulated_reading())
             time.sleep(SIMULATED_READING_INTERVAL_SECONDS)
@@ -135,9 +147,9 @@ def store_reading(parsed_values):
 def time_event():
     timer.enter(60, 1, time_event)
     current_time = datetime.now()
-    print("Every minute")
+    logger.debug("Every minute")
     if current_time.minute % 5 == 0:
-        print("Every five minutes")
+        logger.info("Every five minutes")
         with readings_lock:
             temperature_snapshot = _drain(temperatureList)
             humidity_snapshot = _drain(humidityList)
@@ -155,7 +167,7 @@ def time_event():
             store_weather_parameters_in_database(mean_wind_speed, predominant_wind, mean_temp, mean_humidity,
                                                  mean_pressure, accumulated_rain, current_time)
     if current_time.hour == 0 and current_time.minute == 0:
-        print("Every midnight")
+        logger.info("Every midnight")
         with readings_lock:
             store_edge_values_in_database(maxTemperature, minTemperature, maxHumidity, minHumidity,
                                            maxPressure, minPressure, maxWindGust)
