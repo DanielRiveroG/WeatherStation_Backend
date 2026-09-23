@@ -55,6 +55,9 @@ def store_weather_parameters_in_database(wind_speed, wind_direction, temperature
                    "VALUES(?, ?, ?, ?, ?, ?, ?)"
     execute_query(query_string, (wind_speed, wind_direction, temperature, humidity, pressure, rain,
                                   int(timestamp.timestamp())))
+    logger.info(
+        "Stored RawReadings row for %s (wind=%.1f dir=%s temp=%.1f hum=%.1f pres=%.1f rain=%.2f)",
+        timestamp.isoformat(), wind_speed, wind_direction, temperature, humidity, pressure, rain)
 
 
 def store_edge_values_in_database(max_temp, min_temp, max_hum, min_hum, max_pressure, min_pressure, max_wind_gust):
@@ -86,6 +89,7 @@ def store_edge_values_in_database(max_temp, min_temp, max_hum, min_hum, max_pres
         mean_temp, mean_humidity, mean_pressure, mean_wind_speed,
         dominant_wind_direction, accumulated_rain,
     ))
+    logger.info("Stored DailySummary row for day %s", day_start.date().isoformat())
 
 
 def fetch_latest_raw_reading():

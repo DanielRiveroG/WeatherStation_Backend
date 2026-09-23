@@ -35,3 +35,19 @@ time, so importing either module (e.g. from a test) doesn't force a logging conf
 it — it doesn't call `basicConfig` itself, since that's each entry point's responsibility, not a shared module's.
 `MainProgram.py`'s per-minute tick logs at `DEBUG` (too frequent for `INFO`); the five-minute and midnight events log
 at `INFO`.
+
+## Addendum: log every API request and every successful database write
+
+The user asked for two more things logged, at `INFO`:
+
+- **Every API interaction** — `Api.py` has an `@app.after_request` hook logging `<method> <path>[?query] -> <status>`
+  for every request the Flask app handles, including 404s for unmatched routes (registered on `app`, not the
+  `weather` blueprint, so it isn't limited to `/weather/...` routes).
+- **Every database write** — `store_weather_parameters_in_database` and `store_edge_values_in_database`
+  ([DatabaseOperations.py](../../DatabaseOperations.py)) each log a line after their `execute_query` call
+  succeeds, naming what was written (the `RawReadings` row's values / the `DailySummary` row's day).
+
+There is still no log *file* — see the parent decision above: stdout only, with no rotation/clearing logic in this
+app, since that's `journald`'s job once [0012](0012-deployment-systemd-gunicorn-nginx.md) exists. Until then, running
+either process manually prints to whatever terminal is open and nothing is persisted; redirect stdout to a file by
+hand (e.g. `python MainProgram.py > mainprogram.log 2>&1`) if you want to keep it during local testing.

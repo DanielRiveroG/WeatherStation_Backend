@@ -26,6 +26,13 @@ def _local_midnight(moment):
     return moment.replace(hour=0, minute=0, second=0, microsecond=0)
 
 
+@app.after_request
+def log_request(response):
+    query = f"?{request.query_string.decode()}" if request.query_string else ""
+    logger.info("%s %s%s -> %s", request.method, request.path, query, response.status_code)
+    return response
+
+
 @weather.route('/live')
 def live():
     latest = db.fetch_latest_raw_reading()
